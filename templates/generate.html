@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Quiz - MCQ Generator{% endblock %}
+
+{% block content %}
+<div class="generate-section">
+    <h1>Generate MCQ Quiz</h1>
+    <p>Paste your text below to generate a quiz</p>
+
+    <form id="generateForm" class="form-group">
+        <div class="form-field">
+            <label for="title">Quiz Title (Optional)</label>
+            <input type="text" id="title" placeholder="e.g., History Chapter 5" class="input-text">
+        </div>
+
+        <div class="form-field">
+            <label for="description">Description (Optional)</label>
+            <textarea id="description" placeholder="Add a description for your quiz" class="input-textarea" rows="2"></textarea>
+        </div>
+
+        <div class="form-field">
+            <label for="text">Enter Text *</label>
+            <textarea id="text" placeholder="Paste your text here..." class="input-textarea" rows="8" required></textarea>
+            <small>Minimum 50 characters required</small>
+        </div>
+
+        <div class="form-field">
+            <label for="numQuestions">Number of Questions</label>
+            <input type="number" id="numQuestions" value="5" min="1" max="20" class="input-text">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large" id="generateBtn">
+            <span class="btn-text">Generate Quiz</span>
+            <span class="btn-loader" style="display:none;">⏳ Generating...</span>
+        </button>
+    </form>
+
+    <div id="result" class="result" style="display:none;">
+        <div class="success-message">
+            <h2>✅ Quiz Generated Successfully!</h2>
+            <p>Your quiz has been created with <span id="questionCount"></span> questions.</p>
+            <a href="#" id="startQuizBtn" class="btn btn-primary btn-large">Start Quiz</a>
+        </div>
+    </div>
+
+    <div id="error" class="error-message" style="display:none;"></div>
+</div>
+
+<script>
+document.getElementById('generateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const generateBtn = document.getElementById('generateBtn');
+    const btnText = generateBtn.querySelector('.btn-text');
+    const btnLoader = generateBtn.querySelector('.btn-loader');
+    
+    generateBtn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('result').style.display = 'none';
+
+    try {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: document.getElementById('title').value || 'Generated Quiz',
+                description: document.getElementById('description').value,
+                text: document.getElementById('text').value,
+                num_questions: parseInt(document.getElementById('numQuestions').value)
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('questionCount').textContent = data.num_questions;
+            document.getElementById('startQuizBtn').href = `/quiz/${data.quiz_id}`;
+            document.getElementById('result').style.display = 'block';
+        } else {
+            showError(data.error || 'Error generating quiz');
+        }
+    } catch (error) {
+        showError('Error: ' + error.message);
+    } finally {
+        generateBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+    }
+});
+
+function showError(message) {
+    const errorDiv = document.getElementById('error');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+</script>
+{% endblock %}

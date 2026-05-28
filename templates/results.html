@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Results - MCQ Generator{% endblock %}
+
+{% block content %}
+<div class="results-section">
+    <div id="loading" class="loading">
+        <p>⏳ Loading results...</p>
+    </div>
+
+    <div id="resultsContainer" style="display:none;">
+        <div class="results-header">
+            <h1 id="quizTitle"></h1>
+        </div>
+
+        <div class="score-card">
+            <div class="score-display">
+                <div class="score-value" id="scoreValue">0%</div>
+                <div class="score-text">Score</div>
+            </div>
+            <div class="score-details">
+                <p>You got <strong id="correctCount">0</strong> out of <strong id="totalCount">0</strong> questions correct</p>
+                <p>Submitted: <span id="submittedTime"></span></p>
+            </div>
+        </div>
+
+        <div class="results-actions">
+            <a href="/generate" class="btn btn-primary">Generate Another Quiz</a>
+            <a href="/" class="btn btn-secondary">Home</a>
+        </div>
+
+        <h2>Answer Review</h2>
+        <div id="resultsDetail" class="results-detail"></div>
+    </div>
+
+    <div id="error" class="error-message" style="display:none;"></div>
+</div>
+
+<script>
+const attemptId = window.location.pathname.split('/').pop();
+let resultsData = {};
+
+async function loadResults() {
+    try {
+        const response = await fetch(`/api/results/${attemptId}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            resultsData = data;
+            displayResults();
+        } else {
+            showError('Results not found');
+        }
+    } catch (error) {
+        showError('Error loading results: ' + error.message);
+    }
+}
+
+function displayResults() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('resultsContainer').style.display = 'block';
+    
+    document.getElementById('quizTitle').textContent = resultsData.quiz_title;
+    document.getElementById('scoreValue').textContent = Math.round(resultsData.percentage) + '%';
+    document.getElementById('correctCount').textContent = resultsData.score;
+    document.getElementById('totalCount').textContent = resultsData.total;
+    document.getElementById('submittedTime').textContent = new Date(resultsData.submitted_at).toLocaleString();
+    
+    const detailContainer = document.getElementById('resultsDetail');
+    detailContainer.innerHTML = '';
+    
+    resultsData.results.forEach((result, index) => {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-item';
+        resultDiv.innerHTML = `
+            <div class="result-number">Question ${index + 1}</div>
+            <h4 class="result-question">${escapeHtml(result.question)}</h4>
+            <div class="result-status">
+                <span class="status-label correct">✓ Correct Answer</span>
+                <span class="status-value">${escapeHtml(result.correct_answer)}</span>
+            </div>
+            ${result.explanation ? `
+                <div class="result-explanation">
+                    <strong>Explanation:</strong> ${escapeHtml(result.explanation)}
+                </div>
+            ` : ''}
+        `;
+        detailContainer.appendChild(resultDiv);
+    });
+}
+
+function showError(message) {
+    document.getElementById('loading').style.display = 'none';
+    const errorDiv = document.getElementById('error');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+loadResults();
+</script>
+{% endblock %}

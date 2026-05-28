@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Home - MCQ Generator{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome to MCQ Generator</h1>
+    <p>Create interactive quizzes from any text instantly!</p>
+    <div class="hero-buttons">
+        <a href="/generate" class="btn btn-primary">Generate Quiz</a>
+        <a href="#features" class="btn btn-secondary">Learn More</a>
+    </div>
+</div>
+
+<section id="features" class="features">
+    <h2>Features</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3>Smart Generation</h3>
+            <p>Automatically generate MCQs from any text using advanced NLP techniques</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Interactive Quiz</h3>
+            <p>Take beautiful, interactive quizzes with instant feedback</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Track Performance</h3>
+            <p>Monitor your scores and see detailed analytics of your progress</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💾</div>
+            <h3>Store History</h3>
+            <p>Keep a complete history of all your quiz attempts</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Paste Text</h3>
+            <p>Enter any text or article</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Generate</h3>
+            <p>AI creates multiple choice questions</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Take Quiz</h3>
+            <p>Answer the questions interactively</p>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>View Results</h3>
+            <p>Get instant feedback and detailed explanations</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

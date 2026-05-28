@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - MCQ Generator{% endblock %}
+
+{% block content %}
+<div class="quiz-section">
+    <div id="loading" class="loading">
+        <p>⏳ Loading quiz...</p>
+    </div>
+
+    <div id="quizContainer" style="display:none;">
+        <div class="quiz-header">
+            <h1 id="quizTitle"></h1>
+            <div class="quiz-progress">
+                <span id="currentQuestion">1</span> / <span id="totalQuestions">0</span>
+            </div>
+        </div>
+
+        <form id="quizForm" class="quiz-form">
+            <div id="questionsContainer"></div>
+            <button type="submit" class="btn btn-primary btn-large">Submit Quiz</button>
+        </form>
+    </div>
+
+    <div id="error" class="error-message" style="display:none;"></div>
+</div>
+
+<script>
+const quizId = window.location.pathname.split('/').pop();
+let quizData = {};
+
+async function loadQuiz() {
+    try {
+        const response = await fetch(`/api/quiz/${quizId}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            quizData = data;
+            displayQuiz();
+        } else {
+            showError('Quiz not found');
+        }
+    } catch (error) {
+        showError('Error loading quiz: ' + error.message);
+    }
+}
+
+function displayQuiz() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('quizContainer').style.display = 'block';
+    
+    document.getElementById('quizTitle').textContent = quizData.title;
+    document.getElementById('totalQuestions').textContent = quizData.num_questions;
+    
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    
+    quizData.questions.forEach((question, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'question-card';
+        questionDiv.innerHTML = `
+            <div class="question-number">Question ${index + 1}</div>
+            <h3 class="question-text">${escapeHtml(question.text)}</h3>
+            <div class="options">
+                ${question.options.map((option, i) => `
+                    <label class="option">
+                        <input type="radio" name="q${question.id}" value="${escapeHtml(option)}" required>
+                        <span>${escapeHtml(option)}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(questionDiv);
+    });
+}
+
+document.getElementById('quizForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const answers = {};
+    quizData.questions.forEach(question => {
+        const selected = document.querySelector(`input[name="q${question.id}"]:checked`);
+        if (selected) {
+            answers[question.id] = selected.value;
+        }
+    });
+    
+    if (Object.keys(answers).length < quizData.num_questions) {
+        alert('Please answer all questions');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quiz_id: quizId,
+                answers: answers
+            })
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+            window.location.href = `/results/${data.attempt_id}`;
+        } else {
+            showError(data.error || 'Error submitting quiz');
+        }
+    } catch (error) {
+        showError('Error: ' + error.message);
+    }
+});
+
+function showError(message) {
+    document.getElementById('loading').style.display = 'none';
+    const errorDiv = document.getElementById('error');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+loadQuiz();
+</script>
+{% endblock %}
